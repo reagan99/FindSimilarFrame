@@ -1,14 +1,15 @@
 import cv2
 import mediapipe as mp
+import os
+import csv
 import numpy as np
 import math
-import csv
-import matplotlib.pyplot as plt
-# 미디어파이프 초기화
+
+# MediaPipe 초기화
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-# 미디어파이프에 정의된 관절 이름 및 관계 사용
+# BODY_PARTS 딕셔너리 업데이트
 BODY_PARTS = {
     "Nose": 0, "LeftEye": 1, "RightEye": 2, "LeftEar": 3, "RightEar": 4,
     "LeftShoulder": 5, "RightShoulder": 6, "LeftElbow": 7, "RightElbow": 8,
@@ -18,7 +19,6 @@ BODY_PARTS = {
 
 POSE_CONNECTIONS = mp_pose.POSE_CONNECTIONS
 
-# BODY_PARTS 딕셔너리 업데이트
 for connection in POSE_CONNECTIONS:
     part1, part2 = connection
     if part1 not in BODY_PARTS:
@@ -26,13 +26,78 @@ for connection in POSE_CONNECTIONS:
     if part2 not in BODY_PARTS:
         BODY_PARTS[part2] = len(BODY_PARTS)
 
+
+# MediaPipe Pose 모델 로드
+def process_videos(video_files):
+    pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+
+    inputWidth = 368
+    inputHeight = 368
+    inputScale = 1.0 / 255
+
+    for video_file in video_files:
+        # 비디오 파일 열기
+        capture = cv2.VideoCapture(video_file)
+
+        # 출력 영상 파일 설정
+        file_name = os.path.splitext(os.path.basename(video_file))[0]
+        output_filename = f"./joint_coordinates_{file_name}_mediapipe.avi"
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        fps = 30
+        output_width = int(capture.get(3))
+        output_height = int(capture.get(4))
+        out = cv2.VideoWriter(output_filename, fourcc, fps, (output_width, output_height))
+
+        # CSV 파일 설정
+        csv_filename = f"./joint_coordinates_{file_name}_mediapipe.csv"
+        with open(csv_filename, mode='w', newline='') as csv_file:
+            fieldnames = ['Frame', 'Joint', 'X', 'Y']
+            csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            csv_writer.writeheader()
+
+        frame_number = 0
+
+        while True:
+            hasFrame, frame = capture.read()
+
+            if not hasFrame:
+                break
+
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            results = pose.process(frame_rgb)
+
+            if results.pose_landmarks:
+                mp_drawing.draw_landmarks(
+                    frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(0, 255, 255), thickness=2, circle_radius=2),
+                    mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2)
+                )
+
+                landmarks = results.pose_landmarks.landmark
+                for i, landmark in enumerate(landmarks):
+                    x, y = int(landmark.x * inputWidth), int(landmark.y * inputHeight)
+                    if landmark.visibility > 0.1:
+                        with open(csv_filename, mode='a', newline='') as csv_file:
+                            csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                            csv_writer.writerow({'Frame': frame_number, 'Joint': i, 'X': x, 'Y': y})
+
+            out.write(frame)
+            frame_number += 1
+
+        # 파일 닫기
+        capture.release()
+        out.release()
+
+        print(f"MediaPipe로 관절 추적, 스켈레톤 그리기 및 CSV 저장 완료: {output_filename}, {csv_filename}")
+
 def calculate_joint_angles(landmarks):
     angles = {}
 
     for pair in POSE_CONNECTIONS:
         part1, part2 = pair
         id1, id2 = BODY_PARTS[part1], BODY_PARTS[part2]
-        
+
         if id1 in landmarks and id2 in landmarks:
             x1, y1 = landmarks[id1]
             x2, y2 = landmarks[id2]
@@ -40,6 +105,7 @@ def calculate_joint_angles(landmarks):
             angle_deg = math.degrees(angle_rad)
             angles[(part1, part2)] = angle_deg
     return angles
+
 
 def read_joint_data(csv_filename):
     joint_data = {}
@@ -60,7 +126,6 @@ def read_joint_data(csv_filename):
     return joint_data
 
 
-
 def calculate_cosine_similarity(v1, v2):
     if len(v1) == 0 or len(v2) == 0:
         return 0
@@ -79,7 +144,8 @@ def calculate_cosine_similarity(v1, v2):
     similarity = dot_product / (norm_v1 * norm_v2)
     return similarity
 
-def save_and_print_top_frames(csv_file1, csv_file2, n=5):
+
+def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5):
     # 두 CSV 파일에서 포즈 데이터 읽어오기
     pose_data1 = read_joint_data(csv_file1)
     pose_data2 = read_joint_data(csv_file2)
@@ -93,12 +159,10 @@ def save_and_print_top_frames(csv_file1, csv_file2, n=5):
 
             # 관절 각도 계산
             angles1 = calculate_joint_angles(landmarks1)
-
             angles2 = calculate_joint_angles(landmarks2)
 
             # 관절 각도를 벡터로 변환
             angle_vector1 = np.array(list(angles1.values()))
-
             angle_vector2 = np.array(list(angles2.values()))
 
             # 코사인 유사도 계산
@@ -110,10 +174,10 @@ def save_and_print_top_frames(csv_file1, csv_file2, n=5):
     frame_similarities.sort(key=lambda x: x[2], reverse=True)
 
     # 상위 N개 프레임 저장 및 출력
-    output_path = "././data/image/"  # 이미지를 저장할 경로 지정
+    output_path = "./image"  # 이미지를 저장할 경로 지정
 
-    for rank, (frame1, frame2, similarity) in enumerate(frame_similarities, 1):
-        if similarity < 0.990:
+    for rank, (frame1, frame2, similarity) in enumerate(frame_similarities[:n], 1):
+        if similarity < 0.997:
             break  # 유사도가 99.7% 미만인 프레임이 나오면 종료
 
         cap1.set(cv2.CAP_PROP_POS_FRAMES, frame1)
@@ -127,16 +191,22 @@ def save_and_print_top_frames(csv_file1, csv_file2, n=5):
             cv2.imwrite(f"{output_path}sim{rank}_2.png", frame2_img)
             print(f"Frames {frame1} from CSV1 and {frame2} from CSV2 (Similarity: {similarity}) saved as {output_path}sim{rank}_1.png and {output_path}sim{rank}_2.png.")
             abs(frame2-frame1)
-            
+
         else:
             print(f"Frames {frame1} from CSV1 and {frame2} from CSV2 (Similarity: {similarity}) could not be read.")
 
-# 두 CSV 파일 경로와 비디오 파일 경로
 
-csv_file1 = "././.csv"
-csv_file2 = "./..csv"
-cap1 = cv2.VideoCapture("././.avi")
-cap2 = cv2.VideoCapture("././.avi")
+# 두 CSV 파일 경로와 비디오 파일 경로
+video_files = [
+    "./me.mp4",
+    "./vas1.mp4",
+]
+
+csv_file1 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.csv"
+csv_file2 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.csv"
+cap1 = cv2.VideoCapture(f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.avi")
+cap2 = cv2.VideoCapture(f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.avi")
 
 # 상위 5개 프레임 저장 및 출력
-save_and_print_top_frames(csv_file1, csv_file2, n=100)
+process_videos(video_files)
+save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5)
