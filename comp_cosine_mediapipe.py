@@ -174,7 +174,7 @@ def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5):
     frame_similarities.sort(key=lambda x: x[2], reverse=True)
 
     # 상위 N개 프레임 저장 및 출력
-    output_path = "./image"  # 이미지를 저장할 경로 지정
+    output_path = "./"  # 이미지를 저장할 경로 지정
 
     for rank, (frame1, frame2, similarity) in enumerate(frame_similarities[:n], 1):
         if similarity < 0.997:
