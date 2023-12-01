@@ -50,7 +50,7 @@ def process_videos(video_files):
 
         # CSV 파일 설정
         csv_filename = f"./joint_coordinates_{file_name}_mediapipe.csv"
-        with open(csv_filename, mode='w', newline='') as csv_file:
+        with open(csv_filename, mode='w', newline='') as csv_file:  
             fieldnames = ['Frame', 'Joint', 'X', 'Y']
             csv_writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             csv_writer.writeheader()
