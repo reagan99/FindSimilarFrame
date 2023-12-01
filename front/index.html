@@ -23,12 +23,12 @@
         <li id = "slide2" style = "width: 100%;height: 100%">
             <button id = "top_button" onclick="scroll_up()">TOP</button>
             <h1 id = "upload_files">Upload Video</h1>
-            <!-- <p>Upload file to add audio watermark</p>////////// -->
+            <video id="webcam" width="640" height="480" autoplay></video>
             <form id = "form" action="/process_music/" method="post" enctype="multipart/form-data">
                 <label id = "music_file_label" for="music_file">
                     <div id = "music_file_name">Click to upload file</div>
                 </label>
-                <input type="file" name="file" id="music_file" accept=".mp3,.wav" required onchange="updateFileName()">
+                <input type="file" name="file" id="music_file" accept="video/*" required onchange="updateFileName()">
                 <button id = "submit_button" type="submit" onclick = "submit_clicked()">Submit</button>
             </form>
         </li>
