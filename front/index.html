@@ -1,44 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DEEP-SYNC</title>
     <link rel="stylesheet" href="style.css">
     <style>
-     
-    </style>    
+
+    </style>
 </head>
+
 <body>
-    <img src = "https://loading.io/asset/705814">
-    <ul style = "width: 100%;height: 100%">
-        <li id = "slide1">
-            <div id = "content">
+    <ul style="width: 100%;height: 100%">
+        <li id="slide1">
+            <div id="content">
                 <h1 id="title">DEEP-SYNC</h1>
-                <p id="description">DEEP-SYNC is a program which allows you to figure out the similarity of two different videos.<br>
-                It can be used on various fields whenever comparing two postures are required.</p>
-                <button id = "start_button"  onclick="scroll_down()">START</button>
+                <p id="description">DEEP-SYNC is a program which allows you to figure out the similarity of two
+                    different videos.<br>
+                    It can be used on various fields whenever comparing two postures are required.</p>
+                <button id="start_button" onclick="scroll_down()">START</button>
             </div>
         </li>
-        <li id = "slide2" style = "width: 100%;height: 100%">
-            <button id = "top_button" onclick="scroll_up()">TOP</button>
-            <h1 id = "upload_files">Upload Video</h1>
-            <video id="webcam" width="640" height="480" autoplay></video>
-            <form id = "form" action="/process_music/" method="post" enctype="multipart/form-data">
-                <label id = "music_file_label" for="music_file">
-                    <div id = "music_file_name">Click to upload file</div>
-                </label>
-                <input type="file" name="file" id="music_file" accept="video/*" required onchange="updateFileName()">
-                <button id = "submit_button" type="submit" onclick = "submit_clicked()">Submit</button>
-            </form>
-        </li>
-        <li id = "slide3" style = "width: 100%;height: 100%">
-            <button id = "top_button" onclick="scroll_up()">TOP</button>
-            <h1 id = "upload_files">Audio watermark inserted</h1>
-            <p>Click the button to download the file</p>
-            <button id = "submit_button" type="submit" onclick = "download_clicked()">Download</button>
+        <li id="slide2" style="width: 100%;height: 100%">
+            <button id="top_button" onclick="scroll_up()">TOP</button>
+            <h1 id="upload_files">Upload Video</h1>
+            <div id="video_load"
+                style="width: 35rem;display: flex; align-items: center; justify-content: space-between;">
+                <form id="form" action="/process_music/" method="post" enctype="multipart/form-data">
+                    <div style="display: flex; width: 35rem; justify-content: space-between;">
+                        <label id="music_file_label" for="music_file">
+                            <div id="music_file_name">Click to upload file</div>
+                        </label>
+                        <input type="file" name="file" id="music_file" accept="video/*" required
+                            onchange="updateFileName()">    
+
+                        <label id="music_file_label" for="music_file2">
+                            <div id="music_file_name">Click to upload file</div>
+                        </label>
+                        <input type="file" name="file2" id="music_file2" accept="video/*" required
+                            onchange="updateFileName2()">
+                    </div>
+                </form>
+            </div>
+            <button id="submit_button" type="submit" onclick="submit_clicked()">Submit</button>
         </li>
     </ul>
     <script src="script.js"></script>
 </body>
+
 </html>

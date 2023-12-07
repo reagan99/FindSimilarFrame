@@ -14,7 +14,7 @@ body {
     color: #333;
     text-align: center;
     margin: 0 auto;
-    margin-bottom: 1rem;
+    margin-bottom: 3rem;
 }
 
 #form {
@@ -35,7 +35,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    margin-bottom: 3rem;
+    margin: 0;
 }
 #music_file_name{
     font-size: 18px;
@@ -55,6 +55,17 @@ body {
     max-width: 100%;
     display:none;
 }
+#music_file2[type="file"] {
+    border: none;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    width: 300px;
+    max-width: 100%;
+    display:none;
+}
+
 
 #submit_button[type="submit"] {
     border: none;
@@ -67,6 +78,8 @@ body {
     cursor: pointer;
     transition: background-color 0.2s ease-in-out;
     margin-bottom: 3rem;
+    margin-top: 3rem;
+
 }
 html{
     height: 100%;
@@ -194,4 +207,18 @@ width: 100%;
 z-index: 0;
 position: absolute;
 bottom: -30%;
+}
+
+video{
+    transform: rotateY(180deg);
+    -webkit-transform:rotateY(180deg);
+}
+
+#open_cam{
+    width: 15rem;
+    height: 15rem;
+}
+#cam_button{
+    width:15rem;
+    height: 15rem;
 }
