@@ -23,7 +23,7 @@ body {
     align-items: center;
 }
 
-#music_file_label {
+#video_file_label {
     font-size: 18px;
     font-weight: 500;
     color: #333;
@@ -37,7 +37,7 @@ body {
     justify-content: center;
     margin: 0;
 }
-#music_file_name{
+#video_file_name{
     font-size: 18px;
     font-weight: 500;
     color: #333;
@@ -45,7 +45,7 @@ body {
     word-wrap: break-word;
     
 }
-#music_file[type="file"] {
+#video_file[type="file"] {
     border: none;
     border-radius: 5px;
     background-color: #fff;
@@ -55,7 +55,7 @@ body {
     max-width: 100%;
     display:none;
 }
-#music_file2[type="file"] {
+#video_file2[type="file"] {
     border: none;
     border-radius: 5px;
     background-color: #fff;
@@ -190,7 +190,7 @@ li{
 #submit_button:hover {
 background-color: rgb(80,80,80)
 }
-#music_file_label:hover{
+#video_file_label:hover{
 background-color: rgb(230,230,230)
 }
 @keyframes fadeIn {
