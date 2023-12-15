@@ -133,7 +133,7 @@ def calculate_cosine_similarity(v1, v2):
     max_len = max(len(v1), len(v2))
     v1 = np.pad(v1, (0, max_len - len(v1)))
     v2 = np.pad(v2, (0, max_len - len(v2)))
-
+    print(v1)
     dot_product = np.dot(v1, v2)
     norm_v1 = np.linalg.norm(v1)
     norm_v2 = np.linalg.norm(v2)
@@ -145,7 +145,7 @@ def calculate_cosine_similarity(v1, v2):
     return similarity
 
 
-def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5):
+def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n):
     # 두 CSV 파일에서 포즈 데이터 읽어오기
     pose_data1 = read_joint_data(csv_file1)
     pose_data2 = read_joint_data(csv_file2)
@@ -177,7 +177,7 @@ def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5):
     output_path = "./"  # 이미지를 저장할 경로 지정
 
     for rank, (frame1, frame2, similarity) in enumerate(frame_similarities[:n], 1):
-        if similarity < 0.997:
+        if similarity < 0:
             break  # 유사도가 99.7% 미만인 프레임이 나오면 종료
 
         cap1.set(cv2.CAP_PROP_POS_FRAMES, frame1)
@@ -199,14 +199,16 @@ def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5):
 # 두 CSV 파일 경로와 비디오 파일 경로
 video_files = [
     "./me.mp4",
-    "./vas1.mp4",
+    "./vas2.mp4",
 ]
 
 csv_file1 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.csv"
 csv_file2 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.csv"
-cap1 = cv2.VideoCapture(f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.avi")
-cap2 = cv2.VideoCapture(f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.avi")
+cap1 = cv2.VideoCapture("me.mp4")
+cap2 = cv2.VideoCapture("vas2.mp4")
 
 # 상위 5개 프레임 저장 및 출력
 process_videos(video_files)
-save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n=5)
+n = 5
+save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n)
+
