@@ -4,8 +4,7 @@ import os
 import csv
 import numpy as np
 import math
-current_directory = os.getcwd()
-print("현재 작업 디렉토리:", current_directory)
+
 # MediaPipe 초기화
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
@@ -134,7 +133,6 @@ def calculate_cosine_similarity(v1, v2):
     max_len = max(len(v1), len(v2))
     v1 = np.pad(v1, (0, max_len - len(v1)))
     v2 = np.pad(v2, (0, max_len - len(v2)))
-    print(v1)
     dot_product = np.dot(v1, v2)
     norm_v1 = np.linalg.norm(v1)
     norm_v2 = np.linalg.norm(v2)
