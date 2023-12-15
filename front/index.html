@@ -7,13 +7,14 @@
     <title>DEEP-SYNC</title>
     <link rel="stylesheet" href="style.css">
     <style>
-input[type="range"] {
-      width: 40rem;
-      margin: 20px 0;
-    }
-    #selectedNumber { 
-      font-size: 20px;
-    }
+        input[type="range"] {
+            width: 40rem;
+            margin: 20px 0;
+        }
+
+        #selectedNumber {
+            font-size: 20px;
+        }
     </style>
 </head>
 
@@ -50,33 +51,62 @@ input[type="range"] {
             </div>
             <input type="range" id="numberSelector" min="0.0" max="0.5" value="0.0" step="0.1">
             <div id="selectedNumber">Select Period: 0.0</div>
-            <button id="submit_button" type="submit" onclick="submit_clicked(); saveSelectedNumber()">Submit</button>
+            <button id="submit_button" type="submit" onclick="submit_clicked(); submitUserInput()">Submit</button>
         </li>
     </ul>
     <script src="script.js">
     </script>
     <script>
         var numberSelector = document.getElementById('numberSelector');
-  var selectedNumberDisplay = document.getElementById('selectedNumber');
-  var savedNumber;
+        var selectedNumberDisplay = document.getElementById('selectedNumber');
+        var savedNumber;
 
-  // 드래그바 값 변경 시 호출되는 함수
-  function updateSelectedNumber() {
-    var selectedNumber = numberSelector.value;
-    selectedNumberDisplay.textContent = 'Select Period: ' + selectedNumber;
-  }
+        // 드래그바 값 변경 시 호출되는 함수
+        function updateSelectedNumber() {
+            var selectedNumber = numberSelector.value;
+            selectedNumberDisplay.textContent = 'Select Period: ' + selectedNumber;
+        }
 
-  // 버튼 클릭 시 호출되는 함수
-  function saveSelectedNumber() {
-    savedNumber = numberSelector.value;
-    alert('Selected number saved: ' + savedNumber);
-  }
+        // 버튼 클릭 시 호출되는 함수
+        function saveSelectedNumber() {
+        }
 
-  // 초기 값 설정
-  updateSelectedNumber();
+        // 초기 값 설정
+        updateSelectedNumber();
 
-  // 드래그바 값 변경 이벤트에 함수 연결
-  numberSelector.addEventListener('input', updateSelectedNumber);
+        // 드래그바 값 변경 이벤트에 함수 연결
+        numberSelector.addEventListener('input', updateSelectedNumber);
+
+
+        function submitUserInput() {
+            savedNumber = numberSelector.value;
+            var formData = new FormData();
+            formData.append('key3', savedNumber);
+
+            // AJAX를 사용하여 사용자 입력을 서버로 전송
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/process_user_input/', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+            // 서버의 응답을 처리할 콜백 함수 정의
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // 서버 응답을 받아와서 동적으로 화면에 표시
+                        var responseDiv = document.getElementById('gpt3ResponseDiv');
+                        responseDiv.style.display = 'block';  // 결과를 표시할 div를 보이도록 변경
+                        document.getElementById('gpt3Response').innerHTML = xhr.responseText;
+                    } else {
+                        console.error('에러:', xhr.status);
+                    }
+                }
+            };
+
+            // 데이터를 서버로 전송
+            xhr.send(new URLSearchParams(formData));
+        }
+
+
     </script>
 </body>
 
