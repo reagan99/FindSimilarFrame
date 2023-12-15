@@ -1,19 +1,9 @@
-from fastapi import FastAPI, File, UploadFile, Request, Form
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-from typing import List
-import os
 import cv2
 import mediapipe as mp
+import os
 import csv
 import numpy as np
 import math
-import uvicorn
-import time
-
-static_path = os.path.join(os.path.dirname(__file__), "static")
-templates_path = os.path.join(os.path.dirname(__file__), "templates")
 
 # MediaPipe 초기화
 mp_drawing = mp.solutions.drawing_utils
@@ -36,13 +26,8 @@ for connection in POSE_CONNECTIONS:
     if part2 not in BODY_PARTS:
         BODY_PARTS[part2] = len(BODY_PARTS)
 
-app = FastAPI()
 
-# 정적 파일 및 템플릿 설정
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-
-# 동영상 업로드 및 처리 함수
+# MediaPipe Pose 모델 로드
 def process_videos(video_files):
     pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
@@ -105,6 +90,7 @@ def process_videos(video_files):
         out.release()
 
         print(f"MediaPipe로 관절 추적, 스켈레톤 그리기 및 CSV 저장 완료: {output_filename}, {csv_filename}")
+
 def calculate_joint_angles(landmarks):
     angles = {}
 
@@ -157,91 +143,107 @@ def calculate_cosine_similarity(v1, v2):
     similarity = dot_product / (norm_v1 * norm_v2)
     return similarity
 
-# 유사도 분석 결과를 저장하고 이미지 경로를 반환하는 함수
-def save_and_return_top_frames(csv_file1, csv_file2, cap1, cap2, n):
-    joint_data1 = read_joint_data(csv_file1)
-    joint_data2 = read_joint_data(csv_file2)
 
+def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n, scene_length):
+    # 두 CSV 파일에서 포즈 데이터 읽어오기
+    pose_data1 = read_joint_data(csv_file1)
+    pose_data2 = read_joint_data(csv_file2)
+    # 모든 프레임 간의 유사도 계산
     frame_similarities = []
 
-    for frame1, landmarks1 in joint_data1.items():
-        for frame2, landmarks2 in joint_data2.items():
+    for frame1, landmarks1 in pose_data1.items():
+        for frame2, landmarks2 in pose_data2.items():
             if not landmarks1 or not landmarks2:
                 continue
 
+            # 관절 각도 계산
             angles1 = calculate_joint_angles(landmarks1)
             angles2 = calculate_joint_angles(landmarks2)
 
+            # 관절 각도를 벡터로 변환
             angle_vector1 = np.array(list(angles1.values()))
             angle_vector2 = np.array(list(angles2.values()))
 
+            # 코사인 유사도 계산
             similarity = calculate_cosine_similarity(angle_vector1, angle_vector2)
 
             frame_similarities.append((frame1, frame2, similarity))
 
+    # 유사도에 따라 프레임을 정렬
     frame_similarities.sort(key=lambda x: x[2], reverse=True)
 
-    output_path = "../static/similar_frames/"
+    # 상위 N개 쌍 저장 및 출력
+    output_path = "./"  # 이미지를 저장할 경로 지정
+    top_scene_pairs = []
 
-    top_frames_paths = []
+    frame_similarities = []
 
-    for rank, (frame1, frame2, similarity) in enumerate(frame_similarities[:n], 1):
-        if similarity < 0:
-            break
+    for frame1, landmarks1 in pose_data1.items():
+        for frame2, landmarks2 in pose_data2.items():
+            if not landmarks1 or not landmarks2:
+                continue
 
-        cap1.set(cv2.CAP_PROP_POS_FRAMES, frame1)
-        cap2.set(cv2.CAP_PROP_POS_FRAMES, frame2)
+            # 관절 각도 계산
+            angles1 = calculate_joint_angles(landmarks1)
+            angles2 = calculate_joint_angles(landmarks2)
 
-        ret1, frame1_img = cap1.read()
-        ret2, frame2_img = cap2.read()
+            # 관절 각도를 벡터로 변환
+            angle_vector1 = np.array(list(angles1.values()))
+            angle_vector2 = np.array(list(angles2.values()))
 
-        if ret1 and ret2:
-            cv2.imwrite(f"{output_path}sim{rank}_1.png", frame1_img)
-            cv2.imwrite(f"{output_path}sim{rank}_2.png", frame2_img)
-            print(f"Frames {frame1} from CSV1 and {frame2} from CSV2 (Similarity: {similarity}) saved as {output_path}sim{rank}_1.png and {output_path}sim{rank}_2.png.")
-            img1_path = f"{output_path}sim{rank}_1.png"
-            img2_path = f"{output_path}sim{rank}_2.png"
-            print(img1_path), print(img2_path)
-            top_frames_paths.append({"img1": img1_path, "img2": img2_path})
+            # 코사인 유사도 계산
+            similarity = calculate_cosine_similarity(angle_vector1, angle_vector2)
 
-            print(f"Frames {frame1} from CSV1 and {frame2} from CSV2 (Similarity: {similarity}) saved as {img1_path} and {img2_path}.")
-        else:
-            print(f"Frames {frame1} from CSV1 and {frame2} from CSV2 (Similarity: {similarity}) could not be read.")
-    return top_frames_paths
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-# 엔드포인트: 동영상 업로드
-@app.get("/", response_class=HTMLResponse)
-async def get_form(request: Request):
-    return templates.TemplateResponse("index1.html", {"request": request})
+            if similarity >= similarity_threshold:
+                frame_similarities.append((frame1, frame2, similarity))
 
-# 엔드포인트: 동영상 업로드
-@app.post("/upload_videos/")
-async def process_similarity(request: Request, file: UploadFile = File(...), file2: UploadFile = File(...), key3: str = Form(default="None")):
-    # 업로드된 영상 저장
-    video_paths = []
+    # 유사도에 따라 프레임을 정렬
+    frame_similarities.sort(key=lambda x: x[2], reverse=True)
 
-    for video_file in [file, file2]:
-        file_path = f"./static/{video_file.filename}"
-        video_paths.append(file_path)
+    # 상위 N개 프레임 저장 및 출력
+    for i in range(0, len(frame_similarities) - n * scene_length + 1, scene_length):
+        scene = frame_similarities[i:i + n * scene_length]
 
-        with open(file_path, "wb") as video_file_local:
-            video_file_local.write(video_file.file.read())
+        top_pairs = []
+        for j in range(n):
+            scene_part = scene[j * scene_length:(j + 1) * scene_length]
+            avg_similarity = sum(similarity for _, _, similarity in scene_part) / scene_length
+            top_pairs.append((scene_part, avg_similarity))
 
-    # 유사도 분석
-    if len(video_paths) != 2:
-        return {"detail": "Please upload exactly two videos for similarity analysis."}
-    n = 5
-    csv_file1 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_paths[0]))[0]}_mediapipe.csv"
-    csv_file2 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_paths[1]))[0]}_mediapipe.csv"
-    cap1 = cv2.VideoCapture(video_paths[0])
-    cap2 = cv2.VideoCapture(video_paths[1])
-    #time.sleep(1000)
-    top_frames_paths = save_and_return_top_frames(csv_file1, csv_file2, cap1, cap2, n)
-    print(f"Received key3 value from the frontend: {key3}")
-    # 결과를 템플릿에 전달하여 HTML 페이지 렌더링
-    return templates.TemplateResponse("results.html", {"request": request, "top_frames_paths": top_frames_paths})
+        top_pairs.sort(key=lambda x: x[1], reverse=True)
+        best_pair = top_pairs[0][0]
 
+        frames1 = [frame1 for frame1, _, _ in best_pair]
+        frames2 = [frame2 for _, frame2, _ in best_pair]
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+        for frame1, frame2 in zip(frames1, frames2):
+            cap1.set(cv2.CAP_PROP_POS_FRAMES, frame1)
+            cap2.set(cv2.CAP_PROP_POS_FRAMES, frame2)
+
+            ret1, frame1_img = cap1.read()
+            ret2, frame2_img = cap2.read()
+
+            if ret1 and ret2:
+                cv2.imwrite(f"{output_path}best_scene_pair_{frame1}_{frame2}.png", np.hstack([frame1_img, frame2_img]))
+                print(f"프레임 {frame1}에서 시작하는 씬과 프레임 {frame2}에서 시작하는 씬 (평균 유사도: {top_pairs[0][1]})을 {output_path}best_scene_pair_{frame1}_{frame2}.png로 저장했습니다.")
+            else:
+                print(f"프레임 {frame1}에서 시작하는 씬과 프레임 {frame2}에서 시작하는 씬 (평균 유사도: {top_pairs[0][1]})의 프레임을 읽을 수 없습니다.")
+
+# 두 CSV 파일 경로와 비디오 파일 경로
+video_files = [
+    "me.mp4",
+    "vas2.mp4",
+]
+
+csv_file1 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.csv"
+csv_file2 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.csv"
+cap1 = cv2.VideoCapture("me.mp4") 
+cap2 = cv2.VideoCapture("vas2.mp4")
+
+# 상위 5개 프레임 저장 및 출력
+process_videos(video_files)
+n = 5
+scene_length = 5
+similarity_threshold = 0.997
+save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n, scene_length)
+
