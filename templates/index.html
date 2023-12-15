@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEEP-SYNC</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <ul style="width: 100%;height: 100%">
+        <li id="slide1">
+            <div id="content">
+                <h1 id="title">DEEP-SYNC</h1>
+                <p id="description">DEEP-SYNC is a program which allows you to figure out the similarity of two
+                    different videos.<br>
+                    It can be used on various fields whenever comparing two postures are required.</p>
+                <button id="start_button" onclick="scroll_down()">START</button>
+            </div>
+        </li>
+        <li id="slide2" style="width: 100%;height: 100%">
+            <button id="top_button" onclick="scroll_up()">TOP</button>
+            <h1 id="upload_files">Upload Video</h1>
+            <div id="video_load"
+                style="width: 35rem;display: flex; align-items: center; justify-content: space-between;">
+                <form id="form" action="/upload_videos/" method="post" enctype="multipart/form-data">
+                    <div style="display: flex; width: 35rem; justify-content: space-between;">
+                        <label id="music_file_label" for="music_file">
+                            <div id="music_file_name">Click to upload file</div>
+                        </label>
+                        <input type="file" name="file" id="music_file" accept="video/*" required
+                            onchange="updateFileName()">    
+
+                        <label id="music_file_label2" for="music_file2">
+                            <div id="music_file_name2">Click to upload file</div>
+                        </label>
+                        <input type="file" name="file2" id="music_file2" accept="video/*" required
+                            onchange="updateFileName2()">
+                    </div>
+                    <button id="submit_button" type="submit" onclick="submit_clicked()">Submit</button>
+                </form>
+            </div>
+        </li>
+    </ul>
+    <script>
+        function scroll_down() {
+            const list = document.querySelectorAll('li');
+            list.forEach(li => {
+                li.style.transform = 'translateY(-100%)';
+            });
+        }
+
+        function scroll_up() {
+            const list = document.querySelectorAll('li');
+            list.forEach(li => {
+                li.style.transform = 'translateY(0%)';
+            });
+            location.reload(true);
+        }
+
+    </script>
+</body>
+
+</html>

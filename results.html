@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Similar Frames Result</title>
+</head>
+<body>
+    <h1>Similar Frames Result</h1>
+
+    {% for frame_paths in top_frames_paths %}
+        <div style="margin-bottom: 20px;">
+            <h2>Similarity: {{ frame_paths.similarity }}</h2>
+            <img src="{{ frame_paths.img1 }}" alt="Image 1" style="width: 400px; margin-right: 20px;">
+            <img src="{{ frame_paths.img2 }}" alt="Image 2" style="width: 400px;">
+        </div>
+    {% endfor %}
+</body>
+</html>
