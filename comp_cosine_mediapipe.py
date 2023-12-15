@@ -4,7 +4,8 @@ import os
 import csv
 import numpy as np
 import math
-
+current_directory = os.getcwd()
+print("현재 작업 디렉토리:", current_directory)
 # MediaPipe 초기화
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
@@ -198,13 +199,13 @@ def save_and_print_top_frames(csv_file1, csv_file2, cap1, cap2, n):
 
 # 두 CSV 파일 경로와 비디오 파일 경로
 video_files = [
-    "./me.mp4",
-    "./vas2.mp4",
+    "me.mp4",
+    "vas2.mp4",
 ]
 
 csv_file1 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[0]))[0]}_mediapipe.csv"
 csv_file2 = f"./joint_coordinates_{os.path.splitext(os.path.basename(video_files[1]))[0]}_mediapipe.csv"
-cap1 = cv2.VideoCapture("me.mp4")
+cap1 = cv2.VideoCapture("me.mp4") 
 cap2 = cv2.VideoCapture("vas2.mp4")
 
 # 상위 5개 프레임 저장 및 출력
