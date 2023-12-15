@@ -3,9 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DEEP-SYNC</title>
+  <title>Result</title>
+  <style>
+    #img_container{
+      display: flex;
+      width: 60rem;
+      margin: 0 auto;
+      justify-content: space-around;
+    }
+    #slideshow1{
+      width: 28rem;
+    }
+    #slideshow2{
+      width: 28rem;
+    }
+    html{
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;;
+    }
+    body{
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    #title{
+      text-align: center;
+      margin: 0;
+      padding: 4rem;
+      padding-top: 10rem;
+    }
+    
+  </style>
 </head>
 <body>
-  
+<!-- <div style = "display:flex; flex-direction: column;"> -->
+<h1 id = "title">Similar Frames</h1>
+<div id = "img_container">
+  <img id="slideshow1" src="" alt="Slideshow Image1">
+  <img id="slideshow2" src="" alt="Slideshow Image2">
+</div>
+<!-- </div> -->
+
+
+<script>
+var numberOfImages = 5; // 파일의 갯수
+var imageList1 = [];
+var imageList2 = [];
+
+for (var i = numberOfImages; i >= 1; i--) {
+  var fileName = `../sim${i}_1.png`;
+  imageList1.push(fileName);
+}
+
+for (var i = numberOfImages; i >= 1; i--) {
+  var fileName = `../sim${i}_2.png`;
+  imageList2.push(fileName);
+}
+
+  var currentImageIndex1 = 0;
+  var slideshowElement1 = document.getElementById('slideshow1');
+
+  var currentImageIndex2 = 0;
+  var slideshowElement2 = document.getElementById('slideshow2');
+
+  function showNextImage1() {
+    // 현재 이미지 인덱스 증가
+    currentImageIndex1++;
+
+    // 이미지 인덱스가 이미지 리스트의 길이를 초과하면 처음으로 돌아감
+    if (currentImageIndex1 >= imageList1.length) {
+      currentImageIndex1 = 0;
+    }
+
+    // 다음 이미지 표시
+    slideshowElement1.src = imageList1[currentImageIndex1];
+  }
+
+  function showNextImage2() {
+    // 현재 이미지 인덱스 증가
+    currentImageIndex2++;
+
+    // 이미지 인덱스가 이미지 리스트의 길이를 초과하면 처음으로 돌아감
+    if (currentImageIndex2 >= imageList2.length) {
+      currentImageIndex2 = 0;
+    }
+
+    // 다음 이미지 표시
+    slideshowElement2.src = imageList2[currentImageIndex2];
+  }
+  // 0.1초마다 showNextImage 함수 호출
+  setInterval(showNextImage1, 100);
+  setInterval(showNextImage2, 100);
+
+
+  // 초기 이미지 표시
+  slideshowElement1.src = imageList1[currentImageIndex];
+  slideshowElement2.src = imageList2[currentImageIndex];
+
+</script>
+
 </body>
 </html>
